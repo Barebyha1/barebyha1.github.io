@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0, minimum-scale=0.5">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -47,7 +47,11 @@
                 <div class="color-picker-section">
                     <label>Выбрать цвет:</label>
                     <input type="color" id="colorPicker" value="#ff6b6b" />
-                    <button id="clearSelection">Очистить выделение</button>
+                    <button id="applyColor" class="apply-color-btn">Применить цвет</button>
+                    <button id="clearSelection" class="clear-btn">Очистить выделение</button>
+                    <button id="undoLastAction" class="undo-btn" title="Отменить последнее действие">
+                        <span class="undo-icon">↶</span>
+                    </button>
                 </div>
                 <div class="visibility-controls">
                     <label>

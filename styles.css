@@ -132,6 +132,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .visibility-controls {
@@ -176,7 +177,24 @@ body {
     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }
 
-#clearSelection {
+.apply-color-btn {
+    padding: 8px 16px;
+    border: 2px solid #4caf50;
+    border-radius: 20px;
+    background: white;
+    color: #4caf50;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    margin-left: 8px;
+}
+
+.apply-color-btn:hover {
+    background: #4caf50;
+    color: white;
+}
+
+.clear-btn {
     padding: 8px 16px;
     border: 2px solid #ff6b6b;
     border-radius: 20px;
@@ -185,11 +203,40 @@ body {
     cursor: pointer;
     font-weight: 600;
     transition: all 0.3s;
+    margin-left: 8px;
 }
 
-#clearSelection:hover {
+.clear-btn:hover {
     background: #ff6b6b;
     color: white;
+}
+
+.undo-btn {
+    padding: 8px;
+    border: 2px solid #ff9800;
+    border-radius: 50%;
+    background: white;
+    color: #ff9800;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    margin-left: 8px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.undo-btn:hover {
+    background: #ff9800;
+    color: white;
+    transform: rotate(-15deg);
+}
+
+.undo-icon {
+    font-size: 18px;
+    line-height: 1;
 }
 
 .stats {
@@ -243,7 +290,7 @@ body {
 
 .calendar {
     display: grid;
-    gap: 2px;
+    gap: 4px;
     justify-content: center;
     width: 100%;
     max-width: 100%;
@@ -270,7 +317,7 @@ body {
     max-width: 100%;
     width: 100%;
     box-sizing: border-box;
-    gap: 4px;
+    gap: 8px;
 }
 
 .calendar.years {
@@ -278,12 +325,12 @@ body {
     max-width: 100%;
     width: 100%;
     box-sizing: border-box;
-    gap: 6px;
+    gap: 12px;
 }
 
 .period {
     aspect-ratio: 1;
-    border-radius: 3px;
+    border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s;
     border: 1px solid transparent;
@@ -293,69 +340,83 @@ body {
     box-sizing: border-box;
     min-width: 0;
     min-height: 0;
+    margin: 2px;
 }
 
 /* Horizontal bar styles for months and years */
 .calendar.months .period {
     aspect-ratio: unset;
-    height: 20px;
+    height: 32px;
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    font-size: 12px;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    font-size: 15px;
+    font-weight: 700;
+    color: #000;
+    text-shadow: none;
     position: relative;
     overflow: hidden;
-    padding-left: 8px;
-    box-shadow: inset 0 1px 2px rgba(255,255,255,0.2);
+    padding-left: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15), inset 0 1px 2px rgba(255,255,255,0.4);
+    margin-bottom: 6px;
+    min-height: 32px;
+    border: 1px solid rgba(0,0,0,0.1);
 }
 
 .calendar.years .period {
     aspect-ratio: unset;
-    height: 24px;
+    height: 36px;
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    font-size: 14px;
-    font-weight: bold;
-    color: rgba(255, 255, 255, 0.95);
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+    font-size: 17px;
+    font-weight: 800;
+    color: #000;
+    text-shadow: none;
     position: relative;
     overflow: hidden;
-    padding-left: 12px;
-    box-shadow: inset 0 1px 3px rgba(255,255,255,0.25);
+    padding-left: 20px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2), inset 0 1px 3px rgba(255,255,255,0.5);
+    margin-bottom: 8px;
+    min-height: 36px;
+    border: 1px solid rgba(0,0,0,0.15);
 }
 
 /* Color inheritance for lived, current, and remaining periods */
 .calendar.months .period.lived,
 .calendar.years .period.lived {
-    background-color: #28a745;
-    background-image: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    font-weight: 700;
 }
 
 .calendar.months .period.current,
 .calendar.years .period.current {
-    background-color: #ffc107;
-    background-image: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%);
+    background: linear-gradient(135deg, #f57c00 0%, #ff9800 100%);
     animation: pulse 2s infinite;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    font-weight: 700;
 }
 
 .calendar.months .period.remaining,
 .calendar.years .period.remaining {
-    background-color: #e9ecef;
-    background-image: linear-gradient(135deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.02) 100%);
-    color: rgba(0, 0, 0, 0.6);
-    text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
+    background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+    color: #333;
+    text-shadow: none;
+    border: 2px solid #ddd;
+    font-weight: 600;
 }
 
 /* Custom colored periods maintain their colors */
 .calendar.months .period[style*="background-color"],
 .calendar.years .period[style*="background-color"] {
-    background-image: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    color: #fff !important;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8) !important;
+    font-weight: 700 !important;
 }
 
 /* Hover effects for bars */
@@ -372,16 +433,18 @@ body {
 /* Text content for bars */
 .calendar.months .period::before {
     content: attr(data-month);
-    font-size: 11px;
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 600;
     z-index: 1;
+    line-height: 1;
 }
 
 .calendar.years .period::before {
     content: attr(data-year);
-    font-size: 13px;
+    font-size: 15px;
     font-weight: bold;
     z-index: 1;
+    line-height: 1;
 }
 
 .period:hover {
@@ -646,13 +709,23 @@ body {
     }
     
     .calendar.months .period {
-        height: 18px;
-        font-size: 11px;
+        height: 36px;
+        font-size: 13px;
+        padding-left: 16px;
+        margin-bottom: 4px;
+        border-radius: 6px;
+        min-height: 36px;
+        font-weight: 700;
     }
     
     .calendar.years .period {
-        height: 20px;
-        font-size: 12px;
+        height: 40px;
+        font-size: 14px;
+        padding-left: 20px;
+        margin-bottom: 5px;
+        border-radius: 8px;
+        min-height: 40px;
+        font-weight: 800;
     }
     
     .period {
@@ -680,6 +753,21 @@ body {
     .color-controls {
         flex-direction: column;
         gap: 15px;
+    }
+    
+    .color-picker-section {
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+    }
+    
+    .color-picker-section > * {
+        width: 100%;
+        max-width: 200px;
+    }
+    
+    .undo-btn {
+        align-self: center;
     }
     
     .visibility-controls label {
@@ -760,13 +848,19 @@ body {
     }
     
     .calendar.months .period {
-        height: 16px;
-        font-size: 10px;
+        height: 32px;
+        font-size: 12px;
+        padding-left: 14px;
+        margin-bottom: 3px;
+        border-radius: 6px;
     }
     
     .calendar.years .period {
-        height: 18px;
-        font-size: 11px;
+        height: 36px;
+        font-size: 13px;
+        padding-left: 16px;
+        margin-bottom: 4px;
+        border-radius: 7px;
     }
     
     .period {
@@ -849,13 +943,19 @@ body {
     }
     
     .calendar.months .period {
-        height: 14px;
-        font-size: 9px;
+        height: 28px;
+        font-size: 11px;
+        padding-left: 12px;
+        margin-bottom: 2px;
+        border-radius: 5px;
     }
     
     .calendar.years .period {
-        height: 16px;
-        font-size: 10px;
+        height: 32px;
+        font-size: 12px;
+        padding-left: 14px;
+        margin-bottom: 3px;
+        border-radius: 6px;
     }
     
     .period {
@@ -937,13 +1037,19 @@ body {
     }
     
     .calendar.months .period {
-        height: 12px;
-        font-size: 8px;
+        height: 24px;
+        font-size: 10px;
+        padding-left: 10px;
+        margin-bottom: 2px;
+        border-radius: 4px;
     }
     
     .calendar.years .period {
-        height: 14px;
-        font-size: 9px;
+        height: 28px;
+        font-size: 11px;
+        padding-left: 12px;
+        margin-bottom: 2px;
+        border-radius: 5px;
     }
     
     .period {
@@ -1035,9 +1141,17 @@ body {
 /* Touch-friendly improvements */
 @media (hover: none) and (pointer: coarse) {
     .period {
-        min-width: 16px;
-        min-height: 16px;
-        margin: 1px;
+        min-width: 24px;
+        min-height: 24px;
+        margin: 4px;
+        border-radius: 6px;
+    }
+    
+    .calendar.months .period,
+    .calendar.years .period {
+        margin: 8px 0;
+        min-height: 54px; /* Увеличенный размер для Android */
+        touch-action: manipulation;
     }
     
     .period:active {
@@ -1052,11 +1166,97 @@ body {
     #clearSelection:active {
         transform: scale(0.98);
     }
+    
+    /* Prevent scroll interference */
+    .calendar {
+        touch-action: pan-y;
+    }
+    
+    /* Better spacing between periods */
+    .calendar.days {
+        gap: 5px;
+    }
+    
+    .calendar.weeks {
+        gap: 5px;
+    }
+    
+    .calendar.months {
+        gap: 12px;
+    }
+    
+    .calendar.years {
+        gap: 16px;
+    }
 }
 
-/* Mobile-optimized calendar grids */
-.calendar.mobile-optimized {
-    padding: 5px;
+/* Android-specific improvements */
+@media screen and (-webkit-min-device-pixel-ratio: 1) {
+    .calendar.months .period,
+    .calendar.years .period {
+        /* Ensure text is always readable on Android */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-weight: 700;
+        /* Prevent text wrapping */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .calendar.months .period.remaining,
+    .calendar.years .period.remaining {
+        /* Better contrast for remaining periods on Android */
+        background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+        color: #333;
+        text-shadow: none;
+        border: 2px solid #ddd;
+        font-weight: 600;
+    }
+    
+    /* Force hardware acceleration on Android */
+    .period {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+    }
+}
+
+/* Improve scroll behavior on mobile */
+.mobile-device .calendar-container {
+    /* Prevent momentum scrolling conflicts */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    /* Add extra padding to prevent accidental taps */
+    padding: 25px 15px;
+}
+
+/* Better spacing for scroll areas */
+.mobile-device .calendar {
+    padding: 10px 5px;
+    margin: 10px 0;
+}
+
+/* Better touch feedback */
+.mobile-device .period {
+    -webkit-tap-highlight-color: rgba(102, 126, 234, 0.3);
+    tap-highlight-color: rgba(102, 126, 234, 0.3);
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Prevent accidental zooming on touch */
+.mobile-device {
+    touch-action: manipulation;
+}
+
+.mobile-device .calendar {
+    touch-action: pan-y;
+    overscroll-behavior: contain;
 }
 
 .mobile-device .period {
@@ -1083,6 +1283,20 @@ body {
 .mobile-device #colorPicker {
     min-width: 44px;
     min-height: 44px;
+}
+
+.mobile-device .apply-color-btn,
+.mobile-device .clear-btn {
+    min-height: 44px;
+    padding: 12px 20px;
+    font-size: 14px;
+}
+
+.mobile-device .undo-btn {
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
 }
 
 .mobile-device #clearSelection {
@@ -1139,6 +1353,72 @@ body {
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
     .period {
         border-width: 0.5px;
+    }
+}
+
+/* Enhanced mobile spacing and sizing */
+@media (max-width: 768px) {
+    .calendar {
+        gap: 6px;
+    }
+    
+    .calendar.days {
+        gap: 4px;
+    }
+    
+    .calendar.weeks {
+        gap: 4px;
+    }
+    
+    .calendar.months {
+        gap: 12px;
+    }
+    
+    .calendar.years {
+        gap: 16px;
+    }
+    
+    .calendar.months .period {
+        min-height: 50px;
+        height: 50px;
+        font-size: 16px;
+        padding-left: 20px;
+        margin-bottom: 8px;
+        font-weight: 700;
+    }
+    
+    .calendar.years .period {
+        min-height: 56px;
+        height: 56px;
+        font-size: 18px;
+        padding-left: 24px;
+        margin-bottom: 10px;
+        font-weight: 800;
+    }
+}
+
+/* Very small screens - ensure minimum touch targets */
+@media (max-width: 360px) {
+    .calendar.months .period {
+        min-height: 46px;
+        height: 46px;
+        font-size: 14px;
+        padding-left: 16px;
+        font-weight: 700;
+    }
+    
+    .calendar.years .period {
+        min-height: 52px;
+        height: 52px;
+        font-size: 16px;
+        padding-left: 20px;
+        font-weight: 800;
+    }
+    
+    .period {
+        min-width: 22px;
+        min-height: 22px;
+        margin: 3px;
     }
 }
 

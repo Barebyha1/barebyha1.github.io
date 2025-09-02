@@ -11,6 +11,7 @@ class LifeCalendar {
         this.isSelecting = false;
         this.currentEditingPeriod = null;
         this.hidePastPeriods = false;
+        this.actionHistory = []; // История действий для отмены
         
         this.initializeElements();
         this.loadSettings();
@@ -24,7 +25,9 @@ class LifeCalendar {
         this.lifeExpectancyInput = document.getElementById('lifeExpectancy');
         this.viewButtons = document.querySelectorAll('.view-btn');
         this.colorPicker = document.getElementById('colorPicker');
+        this.applyColorBtn = document.getElementById('applyColor');
         this.clearSelectionBtn = document.getElementById('clearSelection');
+        this.undoBtn = document.getElementById('undoLastAction');
         this.calendar = document.getElementById('calendar');
         this.livedCountElement = document.getElementById('livedCount');
         this.remainingCountElement = document.getElementById('remainingCount');
@@ -68,6 +71,21 @@ class LifeCalendar {
 
         this.clearSelectionBtn.addEventListener('click', () => {
             this.clearSelection();
+        });
+
+        // Применение цвета к выделенным периодам
+        this.colorPicker.addEventListener('change', () => {
+            this.applyColorToSelected();
+        });
+
+        // Кнопка применения цвета
+        this.applyColorBtn.addEventListener('click', () => {
+            this.applyColorToSelected();
+        });
+
+        // Кнопка отмены
+        this.undoBtn.addEventListener('click', () => {
+            this.undoLastAction();
         });
 
         // Hide past periods toggle
@@ -119,17 +137,18 @@ class LifeCalendar {
     detectMobile() {
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                (window.innerWidth <= 768) ||
-               ('ontouchstart' in window);
+               ('ontouchstart' in window) ||
+               (navigator.maxTouchPoints > 0);
     }
 
     bindMobileEvents() {
-        // Touch events for period selection
+        // Простое касание для выбора периода
         this.calendar.addEventListener('touchstart', (e) => {
             this.touchStartTime = Date.now();
             this.isSelecting = false;
             
             if (e.target.classList.contains('period')) {
-                e.preventDefault(); // Prevent default touch behavior
+                e.preventDefault(); // Предотвращаем default поведение
                 this.handleTouchStart(e.target, e);
             }
         }, { passive: false });
@@ -137,7 +156,8 @@ class LifeCalendar {
         this.calendar.addEventListener('touchend', (e) => {
             const touchDuration = Date.now() - this.touchStartTime;
             
-            if (e.target.classList.contains('period') && touchDuration < 500) {
+            // Только выбор периода одиночным касанием
+            if (e.target.classList.contains('period') && touchDuration < 500 && !this.isSelecting) {
                 e.preventDefault();
                 this.togglePeriodSelection(e.target);
             }
@@ -146,7 +166,66 @@ class LifeCalendar {
             this.isSelecting = false;
         }, { passive: false });
 
+        // Обработка двойного касания только для заметок
+        let lastTapTime = 0;
+        let tapCount = 0;
+        let tapTimeout;
+        
+        this.calendar.addEventListener('touchend', (e) => {
+            if (e.target.classList.contains('period')) {
+                const currentTime = Date.now();
+                const tapDelay = currentTime - lastTapTime;
+                
+                clearTimeout(tapTimeout);
+                
+                if (tapDelay < 400 && tapDelay > 0) {
+                    tapCount++;
+                    if (tapCount === 2) {
+                        // Двойное касание - открываем заметки
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.openNotesModal(e.target);
+                        tapCount = 0;
+                        return;
+                    }
+                } else {
+                    tapCount = 1;
+                }
+                
+                lastTapTime = currentTime;
+                
+                // Сброс счетчика касаний
+                tapTimeout = setTimeout(() => {
+                    tapCount = 0;
+                }, 400);
+            }
+        });
+
+        // Длинное нажатие для подсказки
+        let longPressTimer;
+        this.calendar.addEventListener('touchstart', (e) => {
+            if (e.target.classList.contains('period')) {
+                longPressTimer = setTimeout(() => {
+                    this.isSelecting = true;
+                    this.showTooltip(e.target, {
+                        pageX: e.touches[0].pageX,
+                        pageY: e.touches[0].pageY
+                    });
+                    
+                    // Вибрация если доступна
+                    if (navigator.vibrate) {
+                        navigator.vibrate(50);
+                    }
+                }, 500); // Увеличили время до 500мс
+            }
+        });
+
+        this.calendar.addEventListener('touchend', () => {
+            clearTimeout(longPressTimer);
+        });
+
         this.calendar.addEventListener('touchmove', (e) => {
+            clearTimeout(longPressTimer);
             if (this.isSelecting) {
                 e.preventDefault();
                 const touch = e.touches[0];
@@ -160,64 +239,21 @@ class LifeCalendar {
                 }
             }
         }, { passive: false });
-
-        // Double-tap for notes on mobile
-        let lastTapTime = 0;
-        this.calendar.addEventListener('touchend', (e) => {
-            if (e.target.classList.contains('period')) {
-                const currentTime = Date.now();
-                const tapDelay = currentTime - lastTapTime;
-                
-                if (tapDelay < 300 && tapDelay > 0) {
-                    // Double tap detected
-                    e.preventDefault();
-                    this.openNotesModal(e.target);
-                }
-                
-                lastTapTime = currentTime;
-            }
-        });
-
-        // Long press for tooltip
-        let longPressTimer;
-        this.calendar.addEventListener('touchstart', (e) => {
-            if (e.target.classList.contains('period')) {
-                longPressTimer = setTimeout(() => {
-                    this.isSelecting = true;
-                    this.showTooltip(e.target, {
-                        pageX: e.touches[0].pageX,
-                        pageY: e.touches[0].pageY
-                    });
-                    
-                    // Haptic feedback if available
-                    if (navigator.vibrate) {
-                        navigator.vibrate(50);
-                    }
-                }, 300);
-            }
-        });
-
-        this.calendar.addEventListener('touchend', () => {
-            clearTimeout(longPressTimer);
-        });
-
-        this.calendar.addEventListener('touchmove', () => {
-            clearTimeout(longPressTimer);
-        });
     }
 
     bindDesktopEvents() {
-        // Desktop events (original behavior)
+        // Клик для выбора периода
         this.calendar.addEventListener('click', (e) => {
             if (e.target.classList.contains('period')) {
                 this.togglePeriodSelection(e.target);
             }
         });
 
-        // Double-click for notes on desktop
+        // Двойной клик ТОЛЬКО для заметок на всех устройствах
         this.calendar.addEventListener('dblclick', (e) => {
             if (e.target.classList.contains('period')) {
                 e.preventDefault();
+                e.stopPropagation();
                 this.openNotesModal(e.target);
             }
         });
@@ -245,9 +281,11 @@ class LifeCalendar {
 
     optimizeForMobile() {
         if (this.isMobile) {
-            // Adjust default view for mobile
+            // Adjust default view for mobile based on screen size
             if (window.innerWidth < 480) {
-                this.setView('weeks'); // Start with weeks view on small screens
+                this.setView('months'); // Start with months view on small screens for better visibility
+            } else if (window.innerWidth < 768) {
+                this.setView('weeks'); // Start with weeks view on medium screens
             }
             
             // Add mobile-specific classes
@@ -262,12 +300,20 @@ class LifeCalendar {
                     }
                 });
             });
+            
+            // Add viewport meta adjustments for better mobile experience
+            const viewport = document.querySelector('meta[name="viewport"]');
+            if (viewport) {
+                viewport.content = 'width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0';
+            }
         }
         
         // Handle orientation changes
         window.addEventListener('orientationchange', () => {
             setTimeout(() => {
                 this.updateCalendar();
+                // Re-detect mobile status after orientation change
+                this.isMobile = this.detectMobile();
             }, 100);
         });
         
@@ -277,6 +323,13 @@ class LifeCalendar {
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {
                 this.updateCalendar();
+                // Re-detect mobile status on resize
+                this.isMobile = this.detectMobile();
+                if (this.isMobile) {
+                    document.body.classList.add('mobile-device');
+                } else {
+                    document.body.classList.remove('mobile-device');
+                }
             }, 250);
         });
     }
@@ -435,22 +488,120 @@ class LifeCalendar {
         const index = parseInt(periodElement.dataset.index);
         
         if (this.selectedPeriods.has(index)) {
+            // Убираем выделение
             this.selectedPeriods.delete(index);
             periodElement.classList.remove('selected');
             this.customColors.delete(index);
             periodElement.style.backgroundColor = '';
         } else {
+            // Просто добавляем в выделенные, но не окрашиваем
             this.selectedPeriods.add(index);
             periodElement.classList.add('selected');
-            const color = this.colorPicker.value;
-            this.customColors.set(index, color);
-            periodElement.style.backgroundColor = color;
+            // НЕ применяем цвет автоматически
         }
         
         this.saveSettings();
     }
 
+    saveActionToHistory(action, data) {
+        this.actionHistory.push({
+            action: action,
+            data: data,
+            timestamp: Date.now()
+        });
+        
+        // Ограничиваем историю 50 действиями
+        if (this.actionHistory.length > 50) {
+            this.actionHistory.shift();
+        }
+    }
+
+    undoLastAction() {
+        if (this.actionHistory.length === 0) {
+            return;
+        }
+        
+        const lastAction = this.actionHistory.pop();
+        
+        switch (lastAction.action) {
+            case 'applyColor':
+                // Отменяем применение цвета
+                lastAction.data.periods.forEach(index => {
+                    if (lastAction.data.previousColors.has(index)) {
+                        this.customColors.set(index, lastAction.data.previousColors.get(index));
+                    } else {
+                        this.customColors.delete(index);
+                    }
+                });
+                break;
+                
+            case 'clearSelection':
+                // Восстанавливаем выделение
+                this.selectedPeriods = new Set(lastAction.data.selectedPeriods);
+                this.customColors = new Map(lastAction.data.customColors);
+                break;
+                
+            case 'addNote':
+                // Удаляем заметку
+                this.notes.delete(lastAction.data.index);
+                if (lastAction.data.hadColor) {
+                    this.customColors.set(lastAction.data.index, lastAction.data.previousColor);
+                } else {
+                    this.customColors.delete(lastAction.data.index);
+                    this.selectedPeriods.delete(lastAction.data.index);
+                }
+                break;
+        }
+        
+        this.updateCalendar();
+        this.saveSettings();
+    }
+
+    applyColorToSelected() {
+        if (this.selectedPeriods.size === 0) {
+            return; // Ничего не выделено
+        }
+        
+        const color = this.colorPicker.value;
+        const previousColors = new Map();
+        
+        // Сохраняем предыдущие цвета для отмены
+        this.selectedPeriods.forEach(index => {
+            if (this.customColors.has(index)) {
+                previousColors.set(index, this.customColors.get(index));
+            }
+        });
+        
+        // Сохраняем действие в истории
+        this.saveActionToHistory('applyColor', {
+            periods: Array.from(this.selectedPeriods),
+            newColor: color,
+            previousColors: previousColors
+        });
+        
+        // Применяем цвет
+        this.selectedPeriods.forEach(index => {
+            this.customColors.set(index, color);
+            const periodElement = document.querySelector(`[data-index="${index}"]`);
+            if (periodElement) {
+                periodElement.style.backgroundColor = color;
+            }
+        });
+        
+        this.saveSettings();
+    }
+
     clearSelection() {
+        if (this.selectedPeriods.size === 0 && this.customColors.size === 0) {
+            return; // Ничего нет для очистки
+        }
+        
+        // Сохраняем состояние для отмены
+        this.saveActionToHistory('clearSelection', {
+            selectedPeriods: Array.from(this.selectedPeriods),
+            customColors: Array.from(this.customColors.entries())
+        });
+        
         this.selectedPeriods.clear();
         this.customColors.clear();
         
@@ -497,8 +648,12 @@ class LifeCalendar {
             tooltipText += `\n\n📝 ${note.text}`;
         }
         
-        // Добавляем подсказку о двойном клике
-        tooltipText += note ? '\n\nДвойной клик - редактировать' : '\n\nДвойной клик - добавить заметку';
+        // Подсказка о двойном клике для всех устройств
+        if (this.isMobile) {
+            tooltipText += note ? '\n\nДвойное касание - редактировать' : '\n\nДвойное касание - добавить заметку';
+        } else {
+            tooltipText += note ? '\n\nДвойной клик - редактировать' : '\n\nДвойной клик - добавить заметку';
+        }
         
         this.createTooltip(tooltipText, event.pageX, event.pageY);
     }
@@ -597,25 +752,40 @@ class LifeCalendar {
         
         const noteText = this.noteInput.value.trim();
         const noteColor = this.noteColorPicker.value;
+        const index = this.currentEditingPeriod;
+        
+        // Сохраняем предыдущее состояние
+        const hadNote = this.notes.has(index);
+        const hadColor = this.customColors.has(index);
+        const previousColor = hadColor ? this.customColors.get(index) : null;
         
         if (noteText) {
+            // Сохраняем действие в истории только если это новая заметка
+            if (!hadNote) {
+                this.saveActionToHistory('addNote', {
+                    index: index,
+                    hadColor: hadColor,
+                    previousColor: previousColor
+                });
+            }
+            
             // Сохраняем заметку
-            this.notes.set(this.currentEditingPeriod, {
+            this.notes.set(index, {
                 text: noteText,
                 color: noteColor,
                 timestamp: Date.now()
             });
             
             // Устанавливаем цвет
-            this.customColors.set(this.currentEditingPeriod, noteColor);
-            this.selectedPeriods.add(this.currentEditingPeriod);
+            this.customColors.set(index, noteColor);
+            this.selectedPeriods.add(index);
         } else {
             // Если текст пустой, удаляем заметку
-            this.notes.delete(this.currentEditingPeriod);
+            this.notes.delete(index);
             
             // Оставляем цвет, если он был установлен
-            this.customColors.set(this.currentEditingPeriod, noteColor);
-            this.selectedPeriods.add(this.currentEditingPeriod);
+            this.customColors.set(index, noteColor);
+            this.selectedPeriods.add(index);
         }
         
         this.updateCalendar();
