@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0, minimum-scale=0.5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-title" content="Life Calendar">
+    <meta name="application-name" content="Life Calendar">
+    <meta name="description" content="Visualize your life in days, weeks, months, and years. Track your time and highlight important periods.">
+    <link rel="manifest" href="manifest.json">
+    <title>Календарь Жизни - Life and Death</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Календарь Жизни</h1>
+            <p class="subtitle">Визуализация вашего времени</p>
+        </header>
+
+        <div class="controls">
+            <div class="birth-date-section">
+                <div>
+                    <label for="birthDate">Дата рождения:</label>
+                    <input type="date" id="birthDate" autocomplete="bday" />
+                </div>
+                <div>
+                    <label for="lifeExpectancy">Ожидаемая продолжительность жизни:</label>
+                    <div class="number-input-group">
+                        <input type="number" id="lifeExpectancy" value="85" min="1" max="120" inputmode="numeric" />
+                        <span>лет</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="view-controls">
+                <button class="view-btn active" data-view="days">Дни</button>
+                <button class="view-btn" data-view="weeks">Недели</button>
+                <button class="view-btn" data-view="months">Месяцы</button>
+                <button class="view-btn" data-view="years">Годы</button>
+            </div>
+
+            <div class="color-controls">
+                <div class="color-picker-section">
+                    <label>Выбрать цвет:</label>
+                    <input type="color" id="colorPicker" value="#ff6b6b" />
+                    <button id="clearSelection">Очистить выделение</button>
+                </div>
+                <div class="visibility-controls">
+                    <label>
+                        <input type="checkbox" id="hidePastPeriods" />
+                        <span class="checkbox-label">Скрыть прошедшие периоды</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-label">Прожито:</span>
+                <span id="livedCount" class="stat-value">0</span>
+                <span id="livedUnit" class="stat-unit">дней</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Осталось:</span>
+                <span id="remainingCount" class="stat-value">0</span>
+                <span id="remainingUnit" class="stat-unit">дней</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Прогресс:</span>
+                <span id="progressPercent" class="stat-value">0%</span>
+            </div>
+        </div>
+
+        <div class="calendar-container">
+            <div id="calendar" class="calendar"></div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color lived"></div>
+                <span>Прожитое время</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color remaining"></div>
+                <span>Оставшееся время</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color current"></div>
+                <span>Текущий период</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes Modal -->
+    <div id="notesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Заметка к периоду</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-info">
+                    <span id="modalPeriodInfo"></span>
+                </div>
+                <div class="note-input-section">
+                    <label for="noteInput">Ваша заметка:</label>
+                    <textarea id="noteInput" placeholder="Добавьте память об этом периоде..." rows="4"></textarea>
+                </div>
+                <div class="note-color-section">
+                    <label for="noteColorPicker">Цвет периода:</label>
+                    <input type="color" id="noteColorPicker" value="#ff6b6b" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="saveNote" class="btn btn-primary">Сохранить</button>
+                <button id="deleteNote" class="btn btn-danger">Удалить заметку</button>
+                <button id="cancelNote" class="btn btn-secondary">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
